@@ -9,6 +9,7 @@ class Cache
     private int _capacity;
     private object _lock = new object();
     private Dictionary<string, CacheItem> _storage = new Dictionary<string, CacheItem>();
+    private readonly TimeSpan _ttl = TimeSpan.FromHours(2);// vreme nakon kojeg ce podatak iz kesa biti zastareo
 
     public Cache(int capacity)
     {
@@ -21,6 +22,12 @@ class Cache
         {
             if (_storage.ContainsKey(key))
             {
+                if (DateTime.Now - _storage[key].Timestamp > _ttl)
+                {
+                    Console.WriteLine($"Podaci za {key} su zastareli (istekao TTL). Brisem iz kesa...");
+                    _storage.Remove(key);
+                    return null;
+                }
                 _storage[key].IncCount();
                 return _storage[key].JSON;
             }
